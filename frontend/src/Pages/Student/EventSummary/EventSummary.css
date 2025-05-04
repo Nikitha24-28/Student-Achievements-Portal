@@ -1,0 +1,276 @@
+/* EventSummary.css */
+
+
+/* Overall page styling */
+.eventsummarypage {
+  height: calc(100vh - 64px); /* Take full viewport height minus navbar */
+  width: calc(100vw - 220px); /* Full width minus sidebar width */
+  margin-left: 220px; /* Push content to the right by sidebar width */
+  padding: 20px;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  background-color: #f4f7f6;
+  transition: background-color 0.3s, color 0.3s;
+  overflow-y: auto; /* Enable scrolling within the content area */
+  position: relative; /* Add position relative */
+  top: 64px; /* Push content down below the navbar */
+}
+
+
+.search-add-wrapper {
+  display: flex;
+  gap: 20px; /* small gap between search and button */
+  width: 100%;
+  max-width: 800px; /* max width to control size */
+}
+
+
+.searchNadd {
+ 
+  display: flex;
+  align-items: center;
+  justify-content: flex-start; /* align items to start */
+  margin-bottom: 40px;
+  margin-left: 200px;
+  padding: 0 10px;
+  gap: 0; /* remove gap */
+}
+
+
+.search-bar {
+  flex: 0 0 180%;
+}
+
+
+.add-btn {
+  flex: 0 0 auto; /* button width adjusts to content */
+  margin-left: 50px; /* small space from search bar */
+  padding: 10px 20px;
+  background-color: #8013bd;
+  height: 50px;
+  width: 200px;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+  font-size: 16px;
+  font-weight: 500;
+}
+
+
+.add-btn:hover {
+  background-color: #8013bd;
+}
+
+
+
+
+/* Event Grid */
+.outerbox {
+  display: flex;
+  justify-content: center;
+  width: 100%;
+}
+
+
+.mainbox {
+  width: 100%;
+  max-width: 900px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+
+
+/* Event Card Styling */
+.event-card {
+  background-color: #f9f9f9;
+  border-radius: 10px;
+  padding: 18px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  flex: 1 1 250px;
+  transition: transform 0.3s, background-color 0.3s, color 0.3s, border 0.3s;
+}
+
+
+.event-card:hover {
+  transform: scale(1.02);
+  background-color: #f5ecfe;
+}
+
+
+/* Modal Styling */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0,0,0,0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 999;
+}
+
+
+.modal-box {
+  background-color: white;
+  padding: 30px;
+  border-radius: 10px;
+  width: 100%;
+  max-width: 600px;
+  max-height: 85vh;
+  overflow-y: auto;
+  transition: background-color 0.3s, color 0.3s;
+}
+
+
+.modal-box input,
+.modal-box textarea {
+  width: 100%;
+  padding: 10px;
+  margin: 8px 0;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  font-size: 14px;
+  transition: background-color 0.3s, color 0.3s, border 0.3s;
+}
+
+
+.modal-box textarea {
+  resize: vertical;
+  height: 80px;
+}
+
+
+.modal-buttons {
+  margin-top: 16px;
+  display: flex;
+  justify-content: space-between;
+}
+
+
+.modal-buttons button {
+  padding: 10px 20px;
+  border: none;
+  border-radius: 8px;
+  font-size: 14px;
+  cursor: pointer;
+  transition: background-color 0.3s ease, color 0.3s;
+}
+
+
+.modal-buttons button[type="submit"] {
+  background-color: #28a745;
+  color: white;
+}
+
+
+.modal-buttons button[type="button"] {
+  background-color: #dc3545;
+  color: white;
+}
+
+
+/* Dark Mode Styles */
+.dark-mode .eventsummarypage {
+  background-color: #303030;
+  color: #fff;
+}
+
+
+.dark-mode .modal-box {
+  background-color: #3a3a3a;
+  color: #ffffff;
+}
+
+
+.dark-mode .modal-box input,
+.dark-mode .modal-box textarea {
+  background-color: #2e2e2e;
+  color: #ffffff;
+  border: 1px solid #555;
+}
+
+
+.dark-mode .modal-buttons button {
+  background-color: #555;
+  color: #fff;
+  border: none;
+}
+
+
+.dark-mode .event-card {
+  background-color: #2f2f2f;
+  color: white;
+  border: 1px solid #555;
+}
+
+
+.dark-mode .event-card:hover {
+  background-color: #444; /* A slightly lighter color for hover effect */
+}
+
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .eventsummarypage {
+    width: 94%; /* Take up almost full width on smaller screens */
+    margin-left: 3%; /* Center the content */
+    padding: 10px; /* Reduce padding */
+    top: 64px; /* Push content down below the navbar */
+  }
+
+
+  .searchNadd {
+    flex-direction: column;
+    align-items: stretch;
+    margin-bottom: 20px; /* Reduce margin */
+    padding: 0; /* Remove padding */
+  }
+
+
+  .search-bar {
+    flex: 0 0 100%; /* Take full width */
+    margin-bottom: 10px; /* Add margin between search and button */
+  }
+
+
+  .add-btn {
+    flex: 0 0 100%; /* Take full width */
+    padding: 10px; /* Adjust padding */
+    font-size: 14px; /* Smaller font size */
+  }
+
+
+  .mainbox {
+    width: 100%;
+    max-width: none; /* Remove max width */
+  }
+
+
+  .event-card {
+    flex: 1 1 100%; /* Cards take full width */
+    padding: 15px; /* Adjust padding */
+    font-size: 14px; /* Reduce font size */
+  }
+
+
+  .modal-box {
+    padding: 20px; /* Reduce padding */
+  }
+
+
+  .modal-box input,
+  .modal-box textarea {
+    padding: 8px; /* Reduce padding */
+    font-size: 12px; /* Reduce font size */
+  }
+
+
+  .modal-buttons button {
+    padding: 8px 16px; /* Reduce padding */
+    font-size: 12px; /* Reduce font size */
+  }
+}

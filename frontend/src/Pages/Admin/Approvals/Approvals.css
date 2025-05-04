@@ -1,0 +1,74 @@
+/* Container for the Approvals page content */
+.approvalspage {
+    position: fixed; /* Fix position to avoid overlap */
+    top: 64px;       /* Height of navbar */
+    left: 250px;     /* Width of sidebar */
+    right: 0;        /* Stretch to right edge */
+    bottom: 0;       /* Stretch to bottom */
+    padding: 2rem;
+    overflow-y: auto; /* Scroll inside content area */
+    box-sizing: border-box;
+    background-color: #f4f7f6;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    color: #333;
+    transition: background-color 0.3s, color 0.3s;
+    z-index: 1; /* Below navbar and sidebar */
+  }
+
+
+  .viewButton{
+    border-color: #8013bd;
+    border-style: solid;
+    color: #8013bd;
+    background-color: #f5ecfe;
+  }
+ 
+  /* Dark mode support */
+  body.dark-mode .approvalspage {
+    background-color: #303030;
+    color: #e4e6eb;
+  }
+ 
+  /* Table container to take full height */
+  .approvalspage .MuiTableContainer-root {
+    max-height: calc(100% - 120px); /* Leave space for header and padding */
+    overflow-y: auto;
+  }
+ 
+  /* Table header styling */
+  .approvalspage .MuiTableHead-root {
+    background-color: #7209b7;
+  }
+ 
+  .approvalspage .MuiTableCell-head {
+    color: #fff;
+    font-weight: 600;
+  }
+ 
+  .MuiTableHead-root .MuiTableCell-head {
+    background-color: #7209b7 !important;
+    color: #fff !important;
+  }
+
+
+ 
+  /* Buttons in table */
+  .approvalspage .MuiButton-outlined {
+    min-width: 80px;
+  }
+ 
+  /* Dialog content typography */
+  .approvalspage .MuiDialogContent-root p,
+  .approvalspage .MuiDialogContent-root .MuiTypography-root {
+    margin-bottom: 0.5rem;
+  }
+ 
+  /* Snackbar styling overrides (optional) */
+  .approvalspage .MuiSnackbar-root {
+    bottom: 20px;
+  }
+ 
+  .modal-texts{
+    margin-bottom: 10px;
+    font-size: 16px;
+  }
