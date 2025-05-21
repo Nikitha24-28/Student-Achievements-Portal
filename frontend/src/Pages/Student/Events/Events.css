@@ -8,7 +8,7 @@
 /* Events page container */
 .eventspage {
   height: 90vh;
-  width: 97%;
+  width: 65%;
   margin-left: 1.5%;
 }
 
@@ -52,6 +52,27 @@
 }
 
 
+.responsive-table-wrapper {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  width: 100%;
+  margin-left: 0;
+  padding: 0;
+  text-align: left;
+}
+
+
+.responsive-table-wrapper .MuiTable-root {
+  width: 100%;
+  min-width: 98%; /* Ensure it fills the container */
+  border-collapse: collapse;
+}
+
+
+.MuiTablePagination-root {
+  justify-content: flex-start !important;
+  padding-left: 8px;
+}
 /* ---------------- Dark Mode Styles ---------------- */
 
 
@@ -127,4 +148,90 @@ body.dark-mode .MuiButton-root {
 /* MUI Outlined Input border */
 body.dark-mode .MuiOutlinedInput-notchedOutline {
   border-color: #aaaaaa;
+}
+
+
+/* ---------- Mobile Responsiveness ---------- */
+
+
+@media screen and (max-width: 768px) {
+  .eventspage {
+    height: auto;
+    width: 100%;
+    margin-left: 0;
+    padding: 10px 5px;
+    overflow-x: auto;
+  }
+
+
+  .searchNaddd {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 15px;
+    margin-bottom: 20px;
+    padding: 0 10px;
+  }
+
+
+  .searchbar {
+    width: 100%;
+    margin-left: 0;
+    padding-left: 0;
+  }
+
+
+  .addeventbtn {
+    width: 100%;
+    margin-left: 0;
+    height: 48px;
+    font-size: 15px;
+  }
+
+
+  .responsive-table-wrapper {
+    padding-left: 5px;
+    margin-left: 5px;
+  }
+
+
+  .responsive-table-wrapper .MuiTable-root {
+    min-width: 700px; /* Enable scroll only on small screens */
+    width: auto;
+  }
+
+
+  .MuiTableCell-root {
+    font-size: 13px !important;
+  }
+
+
+  .MuiTableHead-root .MuiTableCell-head {
+    font-size: 14px !important;
+  }
+
+
+  .MuiDialog-paper {
+    margin: 10px;
+    width: calc(100% - 20px);
+  }
+
+
+  .MuiDialogContent-root .MuiTextField-root {
+    font-size: 14px;
+  }
+
+
+  .MuiTablePagination-root {
+    flex-direction: column;
+    align-items: flex-start !important;
+    gap: 6px;
+    padding-left: 4px;
+  }
+
+
+  .MuiTablePagination-toolbar {
+    flex-wrap: wrap;
+    justify-content: flex-start;
+    gap: 8px;
+  }
 }

@@ -9,15 +9,18 @@ import EventNoteIcon from '@mui/icons-material/EventNote';
 import HowToRegIcon from '@mui/icons-material/HowToReg';
 import AssignmentTurnedInIcon from '@mui/icons-material/AssignmentTurnedIn';
 import HistoryIcon from '@mui/icons-material/History';
+import DescriptionOutlinedIcon from '@mui/icons-material/DescriptionOutlined';
+import TaskAltIcon from '@mui/icons-material/TaskAlt';
+import "./Navlink.css";
 
 
-import "./Navbar.css";
-
-
-const Navbar = () => {
+const Navlink = () => {
   const [darkMode, setDarkMode] = useState(
     localStorage.getItem("darkMode") === "enabled"
   );
+
+
+  const [sidebarOpen, setSidebarOpen] = useState(false);
 
 
   useEffect(() => {
@@ -36,16 +39,23 @@ const Navbar = () => {
   };
 
 
+  const toggleSidebar = () => {
+    setSidebarOpen((prev) => !prev);
+  };
+
+
   const role = localStorage.getItem("role") || "student";
 
 
   const pages = {
     student: [
+      { text: "Registration Progress", link: "/RegistrationProgress", icon: <DescriptionOutlinedIcon /> },
       { text: "Events", link: "/Events", icon: <EventIcon /> },
       { text: "Event Summary", link: "/EventSummary", icon: <EventNoteIcon /> },
     ],
     admin: [
       { text: "Approvals", link: "/Approvals", icon: <HowToRegIcon /> },
+      { text: "Registration Approvals", link: "/RegistrationApprovals", icon: <TaskAltIcon /> },
       { text: "Summary Approvals", link: "/SummaryApprovals", icon: <AssignmentTurnedInIcon /> },
       { text: "Event History", link: "/EventHistory", icon: <HistoryIcon /> },
     ],
@@ -72,16 +82,26 @@ const Navbar = () => {
           />
           <span className="title-text">Student Achievement Portal</span>
         </div>
+
+
         <div className="top-right-icons">
-          <NotificationsIcon sx={{color:"#c77dff"}} style={{ cursor: "pointer" }} />
+          <NotificationsIcon sx={{ color: "#c77dff" }} style={{ cursor: "pointer" }} />
           <Avatar onClick={toggleDarkMode} style={{ cursor: "pointer" }}>
-            {darkMode ? <LightModeIcon sx={{color:"#c77dff"}} /> : <BedtimeIcon sx={{color:"#c77dff"}}/>}
+            {darkMode ? <LightModeIcon sx={{ color: "#c77dff" }} /> : <BedtimeIcon sx={{ color: "#c77dff" }} />}
           </Avatar>
+        </div>
+
+
+        {/* Hamburger for mobile */}
+        <div id="hamburger" className="hamburger" onClick={toggleSidebar}>
+          <div></div>
+          <div></div>
+          <div></div>
         </div>
       </div>
 
 
-      <div className="sidebar">
+      <div className={`sidebar ${sidebarOpen ? "active" : ""}`}>
         <div>
           <ul className="nav-links">
             {navLinks.map((item, index) => (
@@ -91,6 +111,7 @@ const Navbar = () => {
                   className={({ isActive }) =>
                     isActive ? "navlink active" : "navlink"
                   }
+                  onClick={() => setSidebarOpen(false)}
                 >
                   {item.icon && <span className="nav-icon">{item.icon}</span>}
                   {item.text}
@@ -111,4 +132,5 @@ const Navbar = () => {
   );
 };
 
-export default Navbar;
+
+export default Navlink;

@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import "../Login/Login.css";
+import "./Login.css";
 import axios from "axios";
 
 
@@ -10,26 +10,49 @@ const Login = () => {
 
 
   const handleSubmit = async (e) => {
-    e.preventDefault();
+  e.preventDefault();
 
 
-    try {
-      const response = await axios.post('http://localhost:5000/login', {
-        email,
-        password
-      });
-      const role = response.data.role;
-      localStorage.setItem("role",role);
-      role==="admin"?window.location.href="/approvals":window.location.href="/events";
-      localStorage.setItem('email', email);
-    } catch (error) {
-      if (error.response) {
-        alert(error.response.data.error || 'Login failed');
-      } else {
-        setError('Server error');
+  try {
+    // Step 1: Attempt login
+    const response = await axios.post('http://localhost:5000/login', {
+      email,
+      password
+    });
+
+
+    const role = response.data.role;
+    localStorage.setItem("role", role);
+    localStorage.setItem("email", email);
+
+
+    // Step 2: If student, fetch and store reg_no
+    if (role === "student") {
+      const regRes = await axios.get(`http://localhost:5000/student-details/${email}`);
+      if (regRes.data && regRes.data.reg_no) {
+        localStorage.setItem("reg_no", regRes.data.reg_no);
       }
     }
-  };
+
+
+    // Step 3: Redirect based on role
+    role === "admin"
+      ? (window.location.href = "/Approvals")
+      : (window.location.href = "/registrationProgress");
+
+
+  } catch (error) {
+    if (error.response) {
+      alert(error.response.data.error || 'Login failed');
+    } else {
+      setError('Server error');
+    }
+  }
+};
+
+
+
+
   return (
     <div className="loginpage">
       <div className="container">

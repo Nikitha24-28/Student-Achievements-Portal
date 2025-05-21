@@ -20,7 +20,7 @@ html, body {
   /* Top Navbar */
   .top-navbar {
     position: fixed;
-    width: 98vw;
+    width: 100vw;
     display: flex;
     justify-content: space-between;
     align-items: center;

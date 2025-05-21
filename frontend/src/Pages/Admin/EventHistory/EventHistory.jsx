@@ -20,8 +20,6 @@ import {
   FormControl,
   InputLabel,
   Select,
-  MenuItem as MuiMenuItem,
-  Chip,
 } from "@mui/material";
 import axios from "axios";
 import FilterAltIcon from "@mui/icons-material/FilterAlt";
@@ -48,29 +46,15 @@ const EventHistory = () => {
   const open = Boolean(anchorEl);
 
 
+  const imageBaseUrl = "http://localhost:5000/";
+ 
+
+
   const categories = [
-    "Hackathon",
-    "Health",
-    "Business",
-    "Environment",
-    "Quiz",
-    "Tech",
-    "Education",
-    "Science",
-    "Info",
-    "Internship",
-    "Patent filing",
-    "Paper presentation",
-    "Workshop",
-    "Pitch desk"
-    // Add more categories as needed
+    "HACKATHON","PITCH DESK","WORKSHOP","CONFERENCE","PAPER PRESENTATION ","PROJECT PRESENTATION","PATENT FILING","INTERNSHIP","SPORTS","OTHERS"
   ];
-
-
-  const eventIds = Array.from({ length: 85 }, (_, index) => index + 1); // Event ID from 1 to 85
-
-
-  const years = Array.from({ length: 10 }, (_, index) => 2021 + index); // End Year from 2021 to 2030
+  const eventIds = Array.from({ length: 85 }, (_, index) => index + 1);
+  const years = Array.from({ length: 10 }, (_, index) => 2021 + index);
 
 
   useEffect(() => {
@@ -78,10 +62,15 @@ const EventHistory = () => {
   }, []);
 
 
+  useEffect(() => {
+    setPage(0);
+  }, [filteredData]);
+
+
   const fetchAllEventHistory = async () => {
     try {
       const response = await axios.get("http://localhost:5000/approve-event-history");
-      const approvedEvents = response.data.filter(event => event.status === 'approved');
+      const approvedEvents = response.data.filter(event => event.status === "approved");
       setEventHistory(approvedEvents);
       setFilteredData(approvedEvents);
     } catch (error) {
@@ -93,24 +82,21 @@ const EventHistory = () => {
 
 
   const handleSearch = () => {
-    let filtered = eventHistory;
-
-
-    // Apply filtering based on input fields
+    let filtered = [...eventHistory];
     if (filterRegNo) {
-      filtered = filtered.filter((ev) => ev.s_reg_no.toLowerCase().includes(filterRegNo.toLowerCase()));
+      filtered = filtered.filter(ev =>
+        ev.s_reg_no.toLowerCase().includes(filterRegNo.toLowerCase())
+      );
     }
     if (filterCategory.length > 0) {
-      filtered = filtered.filter((ev) => filterCategory.includes(ev.category));
+      filtered = filtered.filter(ev => filterCategory.includes(ev.category));
     }
     if (filterEventId.length > 0) {
-      filtered = filtered.filter((ev) => filterEventId.includes(ev.event_id));
+      filtered = filtered.filter(ev => filterEventId.includes(ev.event_id));
     }
     if (filterEndYear.length > 0) {
-      filtered = filtered.filter((ev) => filterEndYear.includes(ev.end_year));
+      filtered = filtered.filter(ev => filterEndYear.includes(ev.end_year));
     }
-
-
     setFilteredData(filtered);
   };
 
@@ -125,105 +111,130 @@ const EventHistory = () => {
   };
 
 
-  const exportToExcel = () => {
-    const dataToExport = filteredData.map((row) => ({
-      "Reg No": row.s_reg_no || "N/A",
-      "Student Name": row.stud_name || "N/A",
-      "End Year": row.end_year || "N/A",
-      "Event Name": row.event_name || "N/A",
-      "Category": row.category || "N/A",
-      "Organisers": row.e_organisers || "N/A",
-      "Start Date": row.start_date || "N/A",
-      "End Date": row.end_date || "N/A",
-    }));
-
-
-    const worksheet = XLSX.utils.json_to_sheet(dataToExport);
-    const workbook = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(workbook, worksheet, "Event History");
-
-
-    const excelBuffer = XLSX.write(workbook, {
-      bookType: "xlsx",
-      type: "array",
-    });
-    const data = new Blob([excelBuffer], { type: "application/octet-stream" });
-    saveAs(data, "Event_History.xlsx");
-    handleClose();
-  };
-
-
+  // PDF Export
   const exportToPDF = () => {
-    if (!filteredData || filteredData.length === 0) {
-      alert("No data to export.");
-      handleClose();
-      return;
-    }
-
-
-    const doc = new jsPDF();
-    doc.setFontSize(16);
-    doc.text("Event History", 14, 22);
-
-
-    const tableColumn = [
-      "Reg No",
-      "Student Name",
-      "End Year",
-      "Event Name",
-      "Category",
-      "Organisers",
-      "Start Date",
-      "End Date",
-    ];
-
-
-    const tableRows = filteredData.map((row) => [
-      row.s_reg_no || "N/A",
-      row.stud_name || "N/A",
-      row.end_year || "N/A",
-      row.event_name || "N/A",
-      row.category || "N/A",
-      row.e_organisers || "N/A",
-      row.start_date || "N/A",
-      row.end_date || "N/A",
-    ]);
-
-
-    autoTable(doc, {
-      head: [tableColumn],
-      body: tableRows,
-      startY: 30,
-      styles: { fontSize: 9 },
-      headStyles: { fillColor: [22, 160, 133] },
-      margin: { top: 30 },
-    });
-
-
-    doc.save("Event_History.pdf");
+  if (!filteredData || filteredData.length === 0) {
+    alert("No data to export.");
     handleClose();
-  };
+    return;
+  }
 
 
-  const handleOpenFilterModal = () => {
-    setOpenFilterModal(true);
-  };
+  const doc = new jsPDF({ orientation: "landscape", unit: "pt", format: "A4" });
+  doc.text("Event Summary Report", 40, 20);
 
 
-  const handleCloseFilterModal = () => {
-    setOpenFilterModal(false);
-  };
+  const tableColumn = [
+    "Reg No",
+    "Student Name",
+    "End Year",
+    "Event Name",
+    "Category",
+    "Organisers",
+    "Start Date",
+    "End Date",
+    "Image link"
+  ];
+
+
+  const tableRows = filteredData.map(row => [
+    row.s_reg_no || "N/A",
+    row.stud_name || "N/A",
+    row.end_year || "N/A",
+    row.event_name || "N/A",
+    row.category || "N/A",
+    row.e_organisers || "N/A",
+    row.start_date || "N/A",
+    row.end_date || "N/A",
+    "" // Placeholder for hyperlink
+  ]);
+
+
+  autoTable(doc, {
+  head: [tableColumn],
+  body: tableRows,
+  startY: 30,
+  margin: { top: 30 },
+  styles: {
+    fontSize: 8,
+    cellPadding: 3,
+    overflow: 'linebreak'
+  },
+  columnStyles: {
+    3: { cellWidth: 100 },
+    4: { cellWidth: 80 },
+    5: { cellWidth: 100 },
+    6: { cellWidth: 80 },
+    7: { cellWidth: 80 },
+    8: { cellWidth: 80 },
+  },
+  headStyles: { fillColor: [22, 160, 133], fontSize: 9 },
+  didDrawCell: data => {
+    if (data.section === 'body' && data.column.index === 8 && filteredData[data.row.index]?.image) {
+      const imageUrl = `${imageBaseUrl}${filteredData[data.row.index].image}`;
+      doc.setTextColor(0, 0, 255);
+      doc.textWithLink("View Image", data.cell.x + 2, data.cell.y + 10, { url: imageUrl });
+      doc.setTextColor(0, 0, 0);
+    }
+  }
+});
+
+
+  doc.save("Event_History.pdf");
+  handleClose();
+};
+
+
+
+
+  // Excel Export
+  const exportToExcel = () => {
+  if (!filteredData || filteredData.length === 0) {
+    alert("No data to export.");
+    handleClose();
+    return;
+  }
+
+
+  const tableRows = filteredData.map(row => ({
+    "Reg No": row.s_reg_no || "N/A",
+    "Student Name": row.stud_name || "N/A",
+    "End Year": row.end_year || "N/A",
+    "Event Name": row.event_name || "N/A",
+    "Category": row.category || "N/A",
+    "Organisers": row.e_organisers || "N/A",
+    "Start Date": row.start_date || "N/A",
+    "End Date": row.end_date || "N/A",
+    "Image Link": row.image
+      ? { f: `HYPERLINK("${imageBaseUrl}${row.image}", "View Image")` }
+      : "N/A"
+  }));
+
+
+  const worksheet = XLSX.utils.json_to_sheet(tableRows, { cellFormula: true });
+  const workbook = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(workbook, worksheet, "Event History");
+
+
+  XLSX.writeFile(workbook, 'event_summary.xlsx');
+  handleClose();
+};
+
+
+  const handleOpenFilterModal = () => setOpenFilterModal(true);
+  const handleCloseFilterModal = () => setOpenFilterModal(false);
 
 
   const handleFilter = () => {
     handleSearch();
+    setPage(0);
     handleCloseFilterModal();
   };
 
 
   return (
-    <Box className="event-history-container" >
-      <Box display="flex" gap={2} alignItems="center" mb={2}>
+    <Box className="event-history-container">
+      <Box display="flex" gap={2} alignItems="center" mb={2} marginTop={"35px"}>
         <TextField
           label="Search by Reg No"
           variant="outlined"
@@ -233,14 +244,14 @@ const EventHistory = () => {
         />
         <Button
           variant="outlined"
-          sx={{color:"#8013bd" , borderColor:"#8013bd"}}
+          sx={{ color: "#8013bd", borderColor: "#8013bd" }}
           startIcon={<FilterAltIcon />}
           onClick={handleOpenFilterModal}
         >
           Filter
         </Button>
         <IconButton onClick={handleDownloadClick}>
-          <DownloadIcon sx={{color:"#8013bd"}}/>
+          <DownloadIcon sx={{ color: "#8013bd" }} />
         </IconButton>
         <Menu
           anchorEl={anchorEl}
@@ -255,25 +266,14 @@ const EventHistory = () => {
       </Box>
 
 
-      <Modal
-        open={openFilterModal}
-        onClose={handleCloseFilterModal}
-        aria-labelledby="filter-modal-title"
-        aria-describedby="filter-modal-description"
-      >
-        <Box
-        sx={{
-          p: 4,
-          width: 600, // You can adjust this value as per your requirement
-          margin: "auto",  // Centers the modal horizontally
-          backgroundColor: "white",
-          borderRadius: 2,
-          position: "absolute", // Ensures the modal is centered on the screen
-          top: "50%", // Moves it vertically to the center
-          left: "50%", // Moves it horizontally to the center
-          transform: "translate(-50%, -50%)", // Adjusts it so it's perfectly centered
+      {/* Filter Modal */}
+      <Modal open={openFilterModal} onClose={handleCloseFilterModal}>
+        <Box sx={{
+          p: 4, width: 600, margin: "auto", backgroundColor: "white",
+          borderRadius: 2, position: "absolute", top: "50%", left: "50%",
+          transform: "translate(-50%, -50%)"
         }}>
-          <Typography variant="h6" id="filter-modal-title">Filter Events</Typography>
+          <Typography variant="h6">Filter Events</Typography>
           <Box mt={2}>
             <TextField
               label="Reg No"
@@ -294,9 +294,9 @@ const EventHistory = () => {
                 label="Category"
               >
                 {categories.map((category) => (
-                  <MuiMenuItem key={category} value={category}>
+                  <MenuItem key={category} value={category}>
                     {category}
-                  </MuiMenuItem>
+                  </MenuItem>
                 ))}
               </Select>
             </FormControl>
@@ -311,9 +311,9 @@ const EventHistory = () => {
                 label="Event ID"
               >
                 {eventIds.map((id) => (
-                  <MuiMenuItem key={id} value={id}>
+                  <MenuItem key={id} value={id}>
                     {id}
-                  </MuiMenuItem>
+                  </MenuItem>
                 ))}
               </Select>
             </FormControl>
@@ -328,9 +328,9 @@ const EventHistory = () => {
                 label="End Year"
               >
                 {years.map((year) => (
-                  <MuiMenuItem key={year} value={year}>
+                  <MenuItem key={year} value={year}>
                     {year}
-                  </MuiMenuItem>
+                  </MenuItem>
                 ))}
               </Select>
             </FormControl>
@@ -343,13 +343,14 @@ const EventHistory = () => {
       </Modal>
 
 
+      {/* Table */}
       {loading ? (
         <Box display="flex" justifyContent="center" mt={4}>
           <CircularProgress />
         </Box>
       ) : (
         <TableContainer component={Paper}>
-          <Table>
+          <Table sx={{width:"100%"}}>
             <TableHead sx={{ backgroundColor: "#7209b7" }}>
               <TableRow>
                 <TableCell sx={{ fontWeight: "bold", color: "white" }}>Reg No</TableCell>
@@ -360,6 +361,7 @@ const EventHistory = () => {
                 <TableCell sx={{ fontWeight: "bold", color: "white" }}>Start Date</TableCell>
                 <TableCell sx={{ fontWeight: "bold", color: "white" }}>End Date</TableCell>
                 <TableCell sx={{ fontWeight: "bold", color: "white" }}>Organisers</TableCell>
+                <TableCell sx={{ fontWeight: "bold", color: "white" }}>Image</TableCell>
               </TableRow>
             </TableHead>
             <TableBody>
@@ -367,11 +369,8 @@ const EventHistory = () => {
                 .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
                 .map((row, index) => (
                   <TableRow
-                    key={row.id}
-                    sx={{
-                      height: 70,
-                      backgroundColor: index % 2 === 0 ? "#f5f5f5" : "#ffffff",
-                    }}
+                    key={page * rowsPerPage + index}
+                    sx={{ backgroundColor: index % 2 === 0 ? "#f5f5f5" : "#ffffff" }}
                   >
                     <TableCell>{row.s_reg_no}</TableCell>
                     <TableCell>{row.stud_name}</TableCell>
@@ -381,6 +380,16 @@ const EventHistory = () => {
                     <TableCell>{row.start_date}</TableCell>
                     <TableCell>{row.end_date}</TableCell>
                     <TableCell>{row.e_organisers}</TableCell>
+                    <TableCell>
+                      <a
+                        href={`http://localhost:5000/${row.image}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        style={{ color: "#1976d2", textDecoration: "underline" }}
+                      >
+                        Download Image
+                      </a>
+                    </TableCell>
                   </TableRow>
                 ))}
             </TableBody>
@@ -390,9 +399,12 @@ const EventHistory = () => {
             component="div"
             count={filteredData.length}
             rowsPerPage={rowsPerPage}
-            page={page}
-            onPageChange={(event, newPage) => setPage(newPage)}
-            onRowsPerPageChange={(event) => setRowsPerPage(parseInt(event.target.value, 10))}
+            page={Math.min(page, Math.ceil(filteredData.length / rowsPerPage) - 1)}
+            onPageChange={(e, newPage) => setPage(newPage)}
+            onRowsPerPageChange={(e) => {
+              setRowsPerPage(+e.target.value);
+              setPage(0);
+            }}
           />
         </TableContainer>
       )}
