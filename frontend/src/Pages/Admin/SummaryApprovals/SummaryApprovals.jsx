@@ -5,8 +5,7 @@ import {
   Typography, Box, TextField, DialogContent, DialogTitle
 } from "@mui/material";
 import axios from "axios";
-import './SummaryApprovals.css'
-
+import '../SummaryApprovals/SummaryApprovals.css'
 
 const modalStyle = {
   position: "absolute",
@@ -22,7 +21,6 @@ const modalStyle = {
   borderRadius: 2,
 };
 
-
 const SummaryApprovals = () => {
   const [summaries, setSummaries] = useState([]);
   const [selectedSummary, setSelectedSummary] = useState(null);
@@ -30,14 +28,13 @@ const SummaryApprovals = () => {
   const [showRejectField, setShowRejectField] = useState(false);
   const [rejectionReason, setRejectionReason] = useState("");
 
-
   const fetchPendingSummaries = async () => {
     try {
       const res = await axios.get("http://localhost:5000/fetch-pending-summaries");
-     
+      
       // Transform the response data to match expected format
       const transformedData = res.data.map(summary => ({
-        id: summary.id || summary.event_history?.id,
+        id: summary.id || summary.event_history?.id, 
         event_id: summary.event_id || summary.event?.event_id || 'N/A',
         s_reg_no: summary.s_reg_no || summary.student?.reg_number || 'N/A',
         stud_name: summary.stud_name || summary.student?.name || 'N/A',
@@ -48,8 +45,7 @@ const SummaryApprovals = () => {
         description: summary.description || summary.event_history?.description || '',
         image: summary.image || summary.event_history?.image || '',
       }));
-     
-
+      
 
       setSummaries(transformedData);
     } catch (error) {
@@ -58,11 +54,9 @@ const SummaryApprovals = () => {
     }
   };
 
-
   useEffect(() => {
     fetchPendingSummaries();
   }, []);
-
 
   const handleOpen = (summary) => {
     setSelectedSummary(summary);
@@ -71,7 +65,6 @@ const SummaryApprovals = () => {
     setRejectionReason("");
   };
 
-
   const handleClose = () => {
     setOpen(false);
     setSelectedSummary(null);
@@ -79,11 +72,10 @@ const SummaryApprovals = () => {
     setRejectionReason("");
   };
 
-
   const handleApprove = async () => {
     const summary_confirmation_by = localStorage.getItem("email");
     const summary_confirmed_at = new Date().toISOString().slice(0, 19).replace('T', ' ');
- 
+  
     try {
       await axios.put(`http://localhost:5000/approve-summary/${selectedSummary.id}`, {
         summary_confirmation_by,
@@ -99,11 +91,10 @@ const SummaryApprovals = () => {
     setShowRejectField(true);
   };
 
-
   const handleRejectSubmit = async () => {
     const summary_confirmation_by = localStorage.getItem("email");
     const summary_confirmed_at = new Date().toISOString().slice(0, 19).replace('T', ' ');
- 
+  
     try {
       await axios.put(`http://localhost:5000/reject-summary/${selectedSummary.id}`, {
         reason: rejectionReason,
@@ -116,7 +107,6 @@ const SummaryApprovals = () => {
       console.error("Error rejecting summary:", error);
     }
   };
-
 
   return (
     <div className="summaryapprovalspage" style={{ padding: "2rem", marginTop: "1.5rem" }}>
@@ -158,7 +148,6 @@ const SummaryApprovals = () => {
         </TableContainer>
       )}
 
-
       {/* Modal to view full details and reject inline */}
       <Modal open={open} onClose={handleClose}>
         <Box sx={modalStyle}>
@@ -178,7 +167,7 @@ const SummaryApprovals = () => {
                   {selectedSummary.description}
                 </Typography>
               </Box>
-             
+              
               {selectedSummary.image && (
                 <>
                   <Typography sx={{ whiteSpace: 'pre-wrap', marginTop: "5px", marginLeft: "25px" }}><strong>Image:</strong></Typography>
@@ -189,7 +178,7 @@ const SummaryApprovals = () => {
                   />
                 </>
               )}
-             
+              
               <Box sx={{ mt: 3, display: "flex", gap: 2, justifyContent: "flex-end" }}>
                 <Button variant="contained" color="success" onClick={handleApprove}>
                   Approve
@@ -201,7 +190,6 @@ const SummaryApprovals = () => {
                   Cancel
                 </Button>
               </Box>
-
 
               {showRejectField && (
                 <Box sx={{ mt: 3 }}>
@@ -235,6 +223,5 @@ const SummaryApprovals = () => {
     </div>
   );
 };
-
 
 export default SummaryApprovals;

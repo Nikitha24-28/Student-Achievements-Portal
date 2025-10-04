@@ -34,7 +34,6 @@ db.connect((error) => {
 app.post("/register", (req, res) => {
   const { reg_no, event_id } = req.body;
 
-
   // Check if already registered
   db.query(
       "SELECT * FROM registrations WHERE reg_no = ? AND event_id = ?",
@@ -45,7 +44,6 @@ app.post("/register", (req, res) => {
               return res.status(400).json({ message: "You have already registered for this event." });
           }
 
-
           // Check max count vs current registrations
           db.query(
               "SELECT max_count FROM events WHERE event_id = ?",
@@ -55,7 +53,6 @@ app.post("/register", (req, res) => {
                   if (events.length === 0) return res.status(404).json({ message: "Event not found" });
                   const max_count = events[0].max_count;
 
-
                   db.query(
                       "SELECT COUNT(*) AS count FROM registrations WHERE event_id = ?",
                       [event_id],
@@ -64,7 +61,6 @@ app.post("/register", (req, res) => {
                           if (countResult[0].count >= max_count) {
                               return res.status(400).json({ message: "Registration limit reached for this event." });
                           }
-
 
                           // Insert registration
                           db.query(
@@ -88,7 +84,6 @@ const uploadsDir = path.join(__dirname, "uploads");
 if (!fs.existsSync(uploadsDir)) {
   fs.mkdirSync(uploadsDir);
 }
-
 
 
 // Middleware
@@ -124,7 +119,6 @@ app.post("/login", (req, res) => {
 });
 
 
-
 // Fetch student details
 app.get("/student-details/:email", (req, res) => {
   const { email } = req.params;
@@ -136,11 +130,44 @@ app.get("/student-details/:email", (req, res) => {
   });
 });
 
+app.get('/get-registered-events/:email', (req, res) => {
+const email = req.params.email;
+
+// Assuming you join event_registrations and student table
+const query = `
+  SELECT er.*, e.event_name
+  FROM event_registrations er
+  JOIN student s ON er.reg_no = s.reg_no
+  JOIN events e ON er.event_id = e.event_id
+  WHERE s.mail = ?
+`;
+
+db.query(query, [email], (err, result) => {
+  if (err) {
+    console.error("Error fetching registered events:", err);
+    return res.status(500).json({ error: "Internal server error" });
+  }
+  res.json(result);
+});
+});
+
+app.get('/get-registered-events/:email', async (req, res) => {
+const email = req.params.email;
+
+try {
+  const results = await db.query(
+    'SELECT * FROM event_registrations WHERE reg_no = ?', [email]
+  );
+  res.json(results);
+} catch (err) {
+  console.error(err);
+  res.status(500).send('Server error');
+}
+});
 
 
 app.get('/get-registration-info/:email', (req, res) => {
 const email = req.params.email;
-
 
 
 const query = "SELECT user_name, reg_no, dept, end_year FROM student WHERE mail = ?";
@@ -157,10 +184,8 @@ db.query(query, [email], (err, result) => {
 });
 
 
-// Add this to your server routes
 app.post('/register-event', (req, res) => {
 const { student_id, event_id, status, registered_at } = req.body;
-
 
 // First check if the event exists and get its dates
 db.query(
@@ -178,6 +203,14 @@ db.query(
 
     const { max_count, accepted_count, start_date, end_date } = eventResults[0];
 
+    // Prevent registration if event start_date is before today
+    const eventStart = new Date(start_date);
+    const today = new Date();
+    today.setHours(0, 0, 0, 0); // Set to midnight for date-only comparison
+    eventStart.setHours(0, 0, 0, 0);
+    if (eventStart < today) {
+      return res.status(400).json({ message: 'Registration closed: Event has already started.' });
+    }
 
     // Check if already registered for this specific event
     db.query(
@@ -258,6 +291,110 @@ db.query(
 );
 });
 
+// Register team event
+app.post('/register-team-event', (req, res) => {
+const { team_name, members } = req.body;
+
+if (!team_name || !Array.isArray(members) || members.length < 3) {
+  return res.status(400).json({ message: "Team name and at least 3 members required" });
+}
+
+let normalizedMembers = [];
+for (let i = 0; i < 5; i++) {
+  if (members[i]) {
+    normalizedMembers.push(members[i]);
+  } else {
+    normalizedMembers.push({ name: "", roll_no: "" });
+  }
+}
+
+const sql = `
+  INSERT INTO team_registration
+    (team_name, 
+     member1_name, member1_roll, 
+     member2_name, member2_roll, 
+     member3_name, member3_roll,
+     member4_name, member4_roll,
+     member5_name, member5_roll)
+  VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+`;
+
+const params = [
+  team_name,
+  normalizedMembers[0].name, normalizedMembers[0].roll_no,
+  normalizedMembers[1].name, normalizedMembers[1].roll_no,
+  normalizedMembers[2].name, normalizedMembers[2].roll_no,
+  normalizedMembers[3].name, normalizedMembers[3].roll_no,
+  normalizedMembers[4].name, normalizedMembers[4].roll_no,
+];
+
+db.query(sql, params, (err, result) => {
+  if (err) {
+    console.error("Error inserting team registration:", err);
+    return res.status(500).json({ message: "Failed to register team" });
+  }
+  res.status(200).json({ message: "Team registered successfully", team_id: result.insertId });
+});
+});
+
+
+// Add this to server.js
+app.get('/api/registration-block-status/:reg_no', async (req, res) => {
+const reg_no = req.params.reg_no;
+const now = new Date();
+
+db.query(
+  `SELECT re.event_id, e.end_date, e.event_name
+   FROM registered_events re
+   JOIN events e ON re.event_id = e.event_id
+   WHERE re.reg_no = ? AND re.reg_status = 'approved'`,
+  [reg_no],
+  (err, rows) => {
+    if (err) return res.json({ blocked: false });
+
+    if (!rows.length) return res.json({ blocked: false });
+
+    const checkSummary = (row, cb) => {
+      const eventEnd = new Date(row.end_date);
+      const diffDays = Math.floor((now - eventEnd) / (1000 * 60 * 60 * 24));
+      if (diffDays > 3) {
+        db.get(
+          'SELECT * FROM event_history WHERE s_reg_no = ? AND event_id = ?',
+          [reg_no, row.event_id],
+          (err, summaryRow) => {
+            if (err) cb(false, row.event_name);
+            else cb(!!summaryRow, row.event_name);
+          }
+        );
+      } else cb(true, row.event_name);
+    };
+
+    let checked = 0, blocked = false, blockEvent = '';
+    rows.forEach(row => {
+      checkSummary(row, (hasSummary, eventName) => {
+        checked++;
+        if (!hasSummary && !blocked) {
+          blocked = true;
+          blockEvent = eventName;
+        }
+        if (checked === rows.length) {
+          if (blocked) {
+            res.json({
+              blocked: true,
+              message: `You have pending event summary for "${blockEvent}". Please submit before registering for new events.`
+            });
+          } else {
+            res.json({ blocked: false });
+          }
+        }
+      });
+    });
+  }
+);
+});
+
+
+
 
 app.get("/fetch-registrations-admin", (req, res) => {
 db.query("SELECT * FROM event_registrations,student,events where event_registrations.event_id=events.event_id and event_registrations.reg_no=student.reg_no", (err, results) => {
@@ -276,6 +413,7 @@ const sql = `
   JOIN events ON event_registrations.event_id = events.event_id
   WHERE student.reg_no = ?
 `;
+
 
 db.query(sql, [reg_no], (err, results) => {
   if (err) return res.status(500).json({ message: "Database error" });
@@ -298,6 +436,7 @@ const approveQuery = `
   WHERE id = ?
 `;
 
+
 db.query(approveQuery, [confirmed_by, id], (err, result) => {
   if (err) {
     console.error('Approval error:', err);
@@ -306,6 +445,7 @@ db.query(approveQuery, [confirmed_by, id], (err, result) => {
   if (result.affectedRows === 0) {
     return res.status(404).json({ message: 'No registration found with given ID' });
   }
+
 
   // Get the event_id from this registration
   db.query('SELECT event_id FROM event_registrations WHERE id = ?', [id], (err2, rows) => {
@@ -324,9 +464,9 @@ db.query(approveQuery, [confirmed_by, id], (err, result) => {
 });
 });
 
+
 app.post('/reject-registration', (req, res) => {
 const { id, reg_rej_reason, confirmed_by } = req.body;
-
 
 // Find the event_id for this registration
 db.query('SELECT event_id FROM event_registrations WHERE id = ?', [id], (err, rows) => {
@@ -385,37 +525,52 @@ db.query(query, [id], (err) => {
 });
 });
 
-// Submit event for approval
-app.post("/submit-for-approval", (req, res) => {
-  const {
-    event_name, category, start_date, end_date,
-    location, website_link, mode, organization,
-    event_created_by, event_created_at
-  } = req.body;
+app.post('/submit-for-approval', (req, res) => {
+const {
+  event_id,
+  category,
+  event_name,
+  start_date,
+  end_date,
+  location,
+  website_link,
+  organization,
+  mode,
+  event_created_by,
+  eligible_dept,
+  max_count
+} = req.body;
 
-  if (!event_name || !category || !start_date || !end_date || !location || !mode || !organization || !event_created_by || !event_created_at) {
-    return res.status(400).json({ error: "Missing required fields" });
+// Optional: Validate required fields
+if (
+  !event_id || !category || !event_name || !start_date ||
+  !end_date || !location || !event_created_by ||
+  !eligible_dept || !max_count
+) {
+  return res.status(400).json({ message: "Missing required fields" });
+}
+
+const sql = `
+  INSERT INTO events (
+    category, event_name, start_date, end_date,
+    location, website_link, organization, mode,
+    event_created_by, eligible_dept, max_count, status
+  ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+`;
+const values = [
+  category, event_name, start_date, end_date,
+  location, website_link, organization, mode,
+  event_created_by, eligible_dept, max_count, 'pending'
+];
+
+db.query(sql, values, (err, result) => {
+  if (err) {
+    console.error("Insert error:", err);
+    return res.status(500).json({ message: "Server error" });
   }
-
-  const query = `
-    INSERT INTO events
-    (event_name, category, start_date, end_date, location, website_link, mode, organization, status, event_created_by, event_created_at)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'pending', ?, ?)
-  `;
-
-  db.query(query, [
-    event_name, category, start_date, end_date,
-    location, website_link, mode, organization,
-    event_created_by, event_created_at
-  ], (err) => {
-    if (err) {
-      console.error(err);
-      return res.status(500).json({ error: "Submission failed" });
-    }
-    res.status(201).json({ message: "Event submitted for approval" });
-  });
+  res.status(201).json({ message: "Event submitted for approval" });
 });
-
+});
 
 // Fetch approved events
 app.get("/fetch-approved-events", (req, res) => {
@@ -424,7 +579,6 @@ app.get("/fetch-approved-events", (req, res) => {
       res.status(200).json(results);
   });
 });
-
 
 // Fetch pending events
 app.get("/fetch-pending-events", (req, res) => {
@@ -456,6 +610,7 @@ if (status === "rejected") {
   `;
   params = [status, rejection_reason, confirmationBy, confirmationAt, id];
 
+
 } else if (status === "approved") {
   // Update eligible_dept, clear rejection reason
   query = `
@@ -474,7 +629,6 @@ if (status === "rejected") {
   `;
   params = [status, confirmationBy, confirmationAt, id];
 }
-
 
 db.query(query, params, (err, result) => {
   if (err) {
@@ -505,11 +659,9 @@ app.post("/submit-in-eventhistory", upload.single("image"), (req, res) => {
   const { s_reg_no, event_id, description } = req.body;
   const image = req.file ? req.file.path.replace(/\\/g, "/") : null;
 
-
   if (!s_reg_no || !event_id || !description || !image) {
       return res.status(400).json({ error: "All fields including image and description are required" });
   }
-
 
   // 1. Check if event exists AND is approved
   db.query(
@@ -524,7 +676,6 @@ app.post("/submit-in-eventhistory", upload.single("image"), (req, res) => {
               return res.status(400).json({ error: "Event summary can only be added for approved events." });
           }
 
-
           // 2. Check if student registration for this event is approved
           db.query(
               "SELECT * FROM event_registrations WHERE event_id = ? AND reg_no = ? AND reg_status = 'approved'",
@@ -538,7 +689,6 @@ app.post("/submit-in-eventhistory", upload.single("image"), (req, res) => {
                       return res.status(403).json({ error: "You are not approved for this event or not registered." });
                   }
 
-
                   // 3. Check if summary already submitted (optional, but recommended)
                   db.query(
                       "SELECT * FROM event_history WHERE event_id = ? AND s_reg_no = ?",
@@ -551,7 +701,6 @@ app.post("/submit-in-eventhistory", upload.single("image"), (req, res) => {
                           if (historyResults.length > 0) {
                               return res.status(409).json({ error: "Summary already submitted for this event." });
                           }
-
 
                           // 4. Insert event summary
                           const insertQuery = `
@@ -573,6 +722,7 @@ app.post("/submit-in-eventhistory", upload.single("image"), (req, res) => {
       }
   );
 });
+
 
 
 // Fetch all event history
@@ -681,6 +831,7 @@ app.put('/reject-summary/:id', (req, res) => {
   });
 });
 
+
 // Fetch only approved summaries
 app.get('/approve-event-history', async (req, res) => {
   const sql = `
@@ -705,6 +856,7 @@ app.get('/approve-event-history', async (req, res) => {
     ORDER BY eh.event_id ASC
   `;
 
+
   db.query(sql, (err, results) => {
       if (err) {
           console.error('Error fetching approved event history:', err);
@@ -713,6 +865,7 @@ app.get('/approve-event-history', async (req, res) => {
       res.json(results);
   });
 });
+
 
 // Fetch event history by student registration number
 app.get("/event-history/:regNo", (req, res) => {
@@ -746,6 +899,8 @@ app.get("/event-history/:regNo", (req, res) => {
 });
 
 
+
+
 // Fetch event by ID (only approved)
 app.get("/events/:id", (req, res) => {
   const { id } = req.params;
@@ -757,13 +912,12 @@ app.get("/events/:id", (req, res) => {
   });
 });
 
-
 app.get("/summary-notifications/:regNo", (req, res) => {
   const regNo = req.params.regNo;
   const query = `
-      select event_name ,end_date from events e, event_registrations r where e.event_id=r.event_id and r.reg_status="approved" and r.reg_no=?
+      select event_name ,end_date from events e, event_registrations r where e.event_id=r.event_id and r.reg_status="approved" and r.reg_no=? 
   `;
- 
+  
   db.query(query, [regNo], (err, results) => {
       if (err) {
           console.error('Error fetching notifications by regNo:', err);
@@ -773,28 +927,27 @@ app.get("/summary-notifications/:regNo", (req, res) => {
   });
 });
 
-
 // Assuming you have a MySQL connection named `db`
-app.delete('/delete-registration', async (req, res) => {
-const { event_id, reg_no } = req.query;
-if (!event_id || !reg_no) {
-  return res.status(400).json({ error: 'event_id and reg_no are required' });
-}
-
-
-try {
-  const [result] = await db.execute(
-    'DELETE FROM event_registrations WHERE event_id = ? AND reg_no = ?',
-    [event_id, reg_no]
-  );
-  if (result.affectedRows === 0) {
-    return res.status(404).json({ error: 'Registration not found' });
+// Cancel (delete) a registration
+app.delete('/delete-registration', (req, res) => {
+  const { event_id, reg_no } = req.query;
+  if (!event_id || !reg_no) {
+      return res.status(400).json({ message: "Missing event_id or reg_no" });
   }
-  res.status(204).send(); // Success, no content
-} catch (err) {
-  console.error('Error deleting registration:', err);
-  res.status(500).json({ error: 'Server error', details: err.message });
-}
+  db.query(
+      "DELETE FROM event_registrations WHERE event_id = ? AND reg_no = ?",
+      [event_id, reg_no],
+      (err, result) => {
+          if (err) {
+              console.error("Error deleting registration:", err);
+              return res.status(500).json({ message: "Database error" });
+          }
+          if (result.affectedRows === 0) {
+              return res.status(404).json({ message: "Registration not found" });
+          }
+          res.json({ message: "Registration cancelled successfully." });
+      }
+  );
 });
 
 
@@ -812,16 +965,15 @@ db.query(query, (err, results) => {
     console.error('Error fetching event data:', err);
     return res.status(500).json({ message: 'Server error' });
   }
-
   const formattedData = results.map(event => ({
     event_name: event.event_name,
     total_students: event.total_students,
     start_date: event.start_date,
   }));
-
   res.json(formattedData);
 });
 });
+
 
 app.get('/uploads/:filename', (req, res) => {
 const filename = req.params.filename;
@@ -833,6 +985,7 @@ if (fs.existsSync(filePath)) {
   res.status(404).send('File not found');
 }
 });
+
 
 // Start Server
 app.listen(PORT, () => {

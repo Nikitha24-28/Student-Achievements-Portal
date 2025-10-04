@@ -11,17 +11,14 @@ import AssignmentTurnedInIcon from '@mui/icons-material/AssignmentTurnedIn';
 import HistoryIcon from '@mui/icons-material/History';
 import DescriptionOutlinedIcon from '@mui/icons-material/DescriptionOutlined';
 import TaskAltIcon from '@mui/icons-material/TaskAlt';
-import "./Navlink.css";
-
+import "./navlink.css";
 
 const Navlink = () => {
   const [darkMode, setDarkMode] = useState(
     localStorage.getItem("darkMode") === "enabled"
   );
 
-
   const [sidebarOpen, setSidebarOpen] = useState(false);
-
 
   useEffect(() => {
     if (darkMode) {
@@ -33,19 +30,15 @@ const Navlink = () => {
     }
   }, [darkMode]);
 
-
   const toggleDarkMode = () => {
     setDarkMode((prev) => !prev);
   };
-
 
   const toggleSidebar = () => {
     setSidebarOpen((prev) => !prev);
   };
 
-
   const role = localStorage.getItem("role") || "student";
-
 
   const pages = {
     student: [
@@ -61,15 +54,12 @@ const Navlink = () => {
     ],
   };
 
-
   const navLinks = pages[role] || [];
-
 
   const handleLogout = () => {
     localStorage.removeItem("role");
     window.location.href = "/Login";
   };
-
 
   return (
     <>
@@ -83,14 +73,12 @@ const Navlink = () => {
           <span className="title-text">Student Achievement Portal</span>
         </div>
 
-
         <div className="top-right-icons">
           <NotificationsIcon sx={{ color: "#c77dff" }} style={{ cursor: "pointer" }} />
           <Avatar onClick={toggleDarkMode} style={{ cursor: "pointer" }}>
             {darkMode ? <LightModeIcon sx={{ color: "#c77dff" }} /> : <BedtimeIcon sx={{ color: "#c77dff" }} />}
           </Avatar>
         </div>
-
 
         {/* Hamburger for mobile */}
         <div id="hamburger" className="hamburger" onClick={toggleSidebar}>
@@ -99,7 +87,6 @@ const Navlink = () => {
           <div></div>
         </div>
       </div>
-
 
       <div className={`sidebar ${sidebarOpen ? "active" : ""}`}>
         <div>
@@ -121,7 +108,6 @@ const Navlink = () => {
           </ul>
         </div>
 
-
         <div className="logout-wrapper">
           <button className="logout" onClick={handleLogout}>
             Logout
@@ -131,6 +117,5 @@ const Navlink = () => {
     </>
   );
 };
-
 
 export default Navlink;

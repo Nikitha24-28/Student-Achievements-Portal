@@ -1,17 +1,25 @@
 /* Main content container */
 .main-content {
-  margin-left: 240px; /* Adjust based on sidebar width */
+  margin-left: 0; /* Remove left margin to use full width */
   padding-top: 64px;
+  padding-left: 240px;
+  padding-right: 10px;
+  box-sizing: border-box;
+  width: 100vw; /* Full viewport width */
+  overflow-x: hidden; /* Prevent page horizontal scroll */
 }
-
 
 /* Events page container */
 .eventspage {
   height: 90vh;
-  width: 65%;
-  margin-left: 1.5%;
+  width: 100%; /* Full width */
+  margin-left: 0; /* Remove left margin */
+  padding: 10px 15px;
+  box-sizing: border-box;
+  overflow: hidden; /* Hide overflow from container */
+  display: flex;
+  flex-direction: column;
 }
-
 
 /* Search and Add section */
 .searchNaddd {
@@ -22,13 +30,13 @@
   margin-bottom: 40px;
   padding: 0 10px;
   gap: 1%;
+  box-sizing: border-box;
 }
-
 
 .searchbar {
   flex: 0 0 85%;
+  box-sizing: border-box;
 }
-
 
 /* Add Event Button */
 .addeventbtn {
@@ -46,35 +54,47 @@
   margin-left: 20px;
 }
 
-
 .addeventbtn:hover {
-  background-color: #8013bd;
+  background-color: #6a0fab; /* Slightly darker purple */
 }
 
-
+/* Responsive table wrapper */
 .responsive-table-wrapper {
-  overflow-x: auto;
+  overflow-x: auto; /* Enable horizontal scroll inside this container only */
   -webkit-overflow-scrolling: touch;
   width: 100%;
   margin-left: 0;
   padding: 0;
   text-align: left;
+  box-sizing: border-box;
+  flex: 1 1 auto; /* Flex grow so it fills available vertical space */
 }
 
-
+/* Table with no fixed large min-width, let it fit container and scroll inside */
 .responsive-table-wrapper .MuiTable-root {
   width: 100%;
-  min-width: 98%; /* Ensure it fills the container */
+  min-width: 900px; /* Adjust to minimum needed for columns */
   border-collapse: collapse;
+  table-layout: auto; /* allow flexible layout */
 }
 
-
+/* Pagination styles */
 .MuiTablePagination-root {
   justify-content: flex-start !important;
   padding-left: 8px;
+  box-sizing: border-box;
+  font-size: 0.9rem;
+  overflow-x: auto; /* allow scroll if needed */
+  width: 100%;
 }
-/* ---------------- Dark Mode Styles ---------------- */
 
+.MuiTablePagination-selectRoot {
+  min-width: 80px;
+  max-width: 100px;
+}
+
+
+/* Dark Mode Styles */
 
 /* Background and text color for eventspage */
 body.dark-mode .eventspage {
@@ -82,13 +102,11 @@ body.dark-mode .eventspage {
   color: #ffffff;
 }
 
-
 /* MUI Paper background and text */
 body.dark-mode .MuiPaper-root {
   background-color: #484747 !important;
   color: #ffffff;
 }
-
 
 /* MUI Table cells, pagination, selects, icons */
 body.dark-mode .MuiTableCell-root,
@@ -98,13 +116,11 @@ body.dark-mode .MuiSvgIcon-root {
   color: #ffffff !important;
 }
 
-
 /* MUI Table header cells */
 body.dark-mode .MuiTableCell-head {
   background-color: #212020 !important;
   font-weight: bold;
 }
-
 
 /* Search bar input */
 body.dark-mode .search-bar input {
@@ -113,7 +129,6 @@ body.dark-mode .search-bar input {
   border: 1px solid #555;
 }
 
-
 /* Add Event button in dark mode */
 body.dark-mode .addeventbtn {
   background-color: #444444;
@@ -121,18 +136,15 @@ body.dark-mode .addeventbtn {
   border: 1px solid #777777;
 }
 
-
 body.dark-mode .addeventbtn:hover {
   background-color: #555555;
 }
-
 
 /* MUI Dialog background and text */
 body.dark-mode .MuiDialog-paper {
   background-color: #2c2c2c;
   color: #ffffff;
 }
-
 
 /* MUI Dialog title, content, actions, inputs, labels, buttons */
 body.dark-mode .MuiDialogTitle-root,
@@ -144,94 +156,7 @@ body.dark-mode .MuiButton-root {
   color: #ffffff;
 }
 
-
 /* MUI Outlined Input border */
 body.dark-mode .MuiOutlinedInput-notchedOutline {
   border-color: #aaaaaa;
-}
-
-
-/* ---------- Mobile Responsiveness ---------- */
-
-
-@media screen and (max-width: 768px) {
-  .eventspage {
-    height: auto;
-    width: 100%;
-    margin-left: 0;
-    padding: 10px 5px;
-    overflow-x: auto;
-  }
-
-
-  .searchNaddd {
-    flex-direction: column;
-    align-items: stretch;
-    gap: 15px;
-    margin-bottom: 20px;
-    padding: 0 10px;
-  }
-
-
-  .searchbar {
-    width: 100%;
-    margin-left: 0;
-    padding-left: 0;
-  }
-
-
-  .addeventbtn {
-    width: 100%;
-    margin-left: 0;
-    height: 48px;
-    font-size: 15px;
-  }
-
-
-  .responsive-table-wrapper {
-    padding-left: 5px;
-    margin-left: 5px;
-  }
-
-
-  .responsive-table-wrapper .MuiTable-root {
-    min-width: 700px; /* Enable scroll only on small screens */
-    width: auto;
-  }
-
-
-  .MuiTableCell-root {
-    font-size: 13px !important;
-  }
-
-
-  .MuiTableHead-root .MuiTableCell-head {
-    font-size: 14px !important;
-  }
-
-
-  .MuiDialog-paper {
-    margin: 10px;
-    width: calc(100% - 20px);
-  }
-
-
-  .MuiDialogContent-root .MuiTextField-root {
-    font-size: 14px;
-  }
-
-
-  .MuiTablePagination-root {
-    flex-direction: column;
-    align-items: flex-start !important;
-    gap: 6px;
-    padding-left: 4px;
-  }
-
-
-  .MuiTablePagination-toolbar {
-    flex-wrap: wrap;
-    justify-content: flex-start;
-    gap: 8px;
-  }
 }

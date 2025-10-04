@@ -30,7 +30,6 @@ import autoTable from "jspdf-autotable";
 import jsPDF from "jspdf";
 import "./EventHistory.css";
 
-
 const EventHistory = () => {
   const [eventHistory, setEventHistory] = useState([]);
   const [filteredData, setFilteredData] = useState([]);
@@ -45,10 +44,8 @@ const EventHistory = () => {
   const [openFilterModal, setOpenFilterModal] = useState(false);
   const open = Boolean(anchorEl);
 
-
   const imageBaseUrl = "http://localhost:5000/";
- 
-
+  
 
   const categories = [
     "HACKATHON","PITCH DESK","WORKSHOP","CONFERENCE","PAPER PRESENTATION ","PROJECT PRESENTATION","PATENT FILING","INTERNSHIP","SPORTS","OTHERS"
@@ -56,16 +53,13 @@ const EventHistory = () => {
   const eventIds = Array.from({ length: 85 }, (_, index) => index + 1);
   const years = Array.from({ length: 10 }, (_, index) => 2021 + index);
 
-
   useEffect(() => {
     fetchAllEventHistory();
   }, []);
 
-
   useEffect(() => {
     setPage(0);
   }, [filteredData]);
-
 
   const fetchAllEventHistory = async () => {
     try {
@@ -79,7 +73,6 @@ const EventHistory = () => {
       setLoading(false);
     }
   };
-
 
   const handleSearch = () => {
     let filtered = [...eventHistory];
@@ -100,16 +93,13 @@ const EventHistory = () => {
     setFilteredData(filtered);
   };
 
-
   const handleDownloadClick = (event) => {
     setAnchorEl(event.currentTarget);
   };
 
-
   const handleClose = () => {
     setAnchorEl(null);
   };
-
 
   // PDF Export
   const exportToPDF = () => {
@@ -119,10 +109,8 @@ const EventHistory = () => {
     return;
   }
 
-
   const doc = new jsPDF({ orientation: "landscape", unit: "pt", format: "A4" });
   doc.text("Event Summary Report", 40, 20);
-
 
   const tableColumn = [
     "Reg No",
@@ -136,7 +124,6 @@ const EventHistory = () => {
     "Image link"
   ];
 
-
   const tableRows = filteredData.map(row => [
     row.s_reg_no || "N/A",
     row.stud_name || "N/A",
@@ -148,7 +135,6 @@ const EventHistory = () => {
     row.end_date || "N/A",
     "" // Placeholder for hyperlink
   ]);
-
 
   autoTable(doc, {
   head: [tableColumn],
@@ -179,12 +165,9 @@ const EventHistory = () => {
   }
 });
 
-
   doc.save("Event_History.pdf");
   handleClose();
 };
-
-
 
 
   // Excel Export
@@ -194,7 +177,6 @@ const EventHistory = () => {
     handleClose();
     return;
   }
-
 
   const tableRows = filteredData.map(row => ({
     "Reg No": row.s_reg_no || "N/A",
@@ -210,27 +192,22 @@ const EventHistory = () => {
       : "N/A"
   }));
 
-
   const worksheet = XLSX.utils.json_to_sheet(tableRows, { cellFormula: true });
   const workbook = XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(workbook, worksheet, "Event History");
-
 
   XLSX.writeFile(workbook, 'event_summary.xlsx');
   handleClose();
 };
 
-
   const handleOpenFilterModal = () => setOpenFilterModal(true);
   const handleCloseFilterModal = () => setOpenFilterModal(false);
-
 
   const handleFilter = () => {
     handleSearch();
     setPage(0);
     handleCloseFilterModal();
   };
-
 
   return (
     <Box className="event-history-container">
@@ -264,7 +241,6 @@ const EventHistory = () => {
           <MenuItem onClick={exportToPDF}>Download as PDF</MenuItem>
         </Menu>
       </Box>
-
 
       {/* Filter Modal */}
       <Modal open={openFilterModal} onClose={handleCloseFilterModal}>
@@ -342,7 +318,6 @@ const EventHistory = () => {
         </Box>
       </Modal>
 
-
       {/* Table */}
       {loading ? (
         <Box display="flex" justifyContent="center" mt={4}>
@@ -411,6 +386,5 @@ const EventHistory = () => {
     </Box>
   );
 };
-
 
 export default EventHistory;

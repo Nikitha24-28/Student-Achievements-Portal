@@ -1,27 +1,31 @@
 // registrationProgress.jsx
 import React, { useEffect, useState } from 'react';
 import {
-  Typography,Card,CardContent,Dialog,DialogTitle,
-  DialogContent,DialogActions,Button,Chip,Divider
+  Typography,
+  Card,
+  CardContent,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  Button,
+  Chip,
+  Divider
 } from '@mui/material';
 import axios from 'axios';
 import './RegistrationProgress.css';
-
 
 const RegistrationProgress = () => {
   const [allEvents, setAllEvents] = useState([]);
   const [modalOpen, setModalOpen] = useState(false);
   const [selectedEvent, setSelectedEvent] = useState(null);
 
-
   const handleOpenModal = (event) => {
     setSelectedEvent(event);
     setModalOpen(true);
   };
 
-
   const handleCloseModal = () => setModalOpen(false);
-
 
   const getStatusChip = (status) => {
     switch (status) {
@@ -34,12 +38,10 @@ const RegistrationProgress = () => {
     }
   };
 
-
   useEffect(() => {
     const fetchData = async () => {
       const r = localStorage.getItem("reg_no");
       if (!r) return alert("Registration number not found in localStorage");
-
 
       try {
         const response = await axios.get(`http://localhost:5000/fetch-registrations-student?reg_no=${r}`);
@@ -53,16 +55,14 @@ const RegistrationProgress = () => {
       }
     };
 
-
     fetchData();
   }, []);
-
 
   // Cancel Event Handler
   const handleCancelEvent = async (eventId) => {
     if (!window.confirm("Are you sure you want to cancel this event?")) return;
     try {
-      // Adjust the endpoint as per your backend API
+      // Adjust endpoint as per your backend API
       await axios.delete(
         `http://localhost:5000/delete-registration?event_id=${eventId}&reg_no=${selectedEvent.reg_no}`
       );
@@ -74,7 +74,6 @@ const RegistrationProgress = () => {
       console.error(err);
     }
   };
-
 
   return (
     <div className="registration-container">
@@ -99,7 +98,6 @@ const RegistrationProgress = () => {
           ))}
         </div>
       </div>
-
 
       {/* Event Details Dialog */}
       <Dialog open={modalOpen} onClose={handleCloseModal} maxWidth="md" fullWidth>
@@ -135,9 +133,7 @@ const RegistrationProgress = () => {
                   </div>
                 </div>
 
-
                 <Divider style={{ margin: '24px 0' }} />
-
 
                 <Typography variant="h6" gutterBottom style={{ marginBottom: '16px' }}>
                   Event Details
@@ -162,17 +158,16 @@ const RegistrationProgress = () => {
                   <div>
                     <Typography variant="subtitle2">Start Date</Typography>
                     <Typography>
-                      {new Date(selectedEvent.start_date).toLocaleDateString()}
+                      {selectedEvent.start_date ? new Date(selectedEvent.start_date).toLocaleDateString() : ""}
                     </Typography>
                   </div>
                   <div>
                     <Typography variant="subtitle2">End Date</Typography>
                     <Typography>
-                      {new Date(selectedEvent.end_date).toLocaleDateString()}
+                      {selectedEvent.end_date ? new Date(selectedEvent.end_date).toLocaleDateString() : ""}
                     </Typography>
                   </div>
                 </div>
-
 
                 {selectedEvent.description && (
                   <>
@@ -182,12 +177,13 @@ const RegistrationProgress = () => {
                   </>
                 )}
 
-
-                {selectedEvent.status === 'rejected' && selectedEvent.rejection_reason && (
+                {selectedEvent.reg_status === 'rejected' && selectedEvent.reg_rej_reason && (
                   <>
                     <Divider style={{ margin: '24px 0' }} />
                     <Typography variant="h6" gutterBottom>Rejection Reason</Typography>
-                    <Typography color="error">{selectedEvent.rejection_reason}</Typography>
+                    <Typography color="error" style={{ whiteSpace: 'pre-wrap' }}>
+                      {selectedEvent.reg_rej_reason}
+                    </Typography>
                   </>
                 )}
               </div>
@@ -213,6 +209,5 @@ const RegistrationProgress = () => {
     </div>
   );
 };
-
 
 export default RegistrationProgress;

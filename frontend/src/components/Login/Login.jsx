@@ -1,17 +1,14 @@
 import React, { useState } from "react";
-import "./Login.css";
+import "../Login/Login.css";
 import axios from "axios";
-
 
 const Login = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState(""); // Error message state
 
-
   const handleSubmit = async (e) => {
   e.preventDefault();
-
 
   try {
     // Step 1: Attempt login
@@ -20,11 +17,9 @@ const Login = () => {
       password
     });
 
-
     const role = response.data.role;
     localStorage.setItem("role", role);
     localStorage.setItem("email", email);
-
 
     // Step 2: If student, fetch and store reg_no
     if (role === "student") {
@@ -34,12 +29,10 @@ const Login = () => {
       }
     }
 
-
     // Step 3: Redirect based on role
     role === "admin"
-      ? (window.location.href = "/Approvals")
+      ? (window.location.href = "/approvals")
       : (window.location.href = "/registrationProgress");
-
 
   } catch (error) {
     if (error.response) {
@@ -49,8 +42,6 @@ const Login = () => {
     }
   }
 };
-
-
 
 
   return (
@@ -65,8 +56,7 @@ const Login = () => {
         <h3 className="content">Student Achivement Portal</h3>
         {error && <p className="error-message">{error}</p>}
 
-
-       
+        
         <form className="login-form" onSubmit={handleSubmit}>
           <label className="form-label">Email</label>
           <input
@@ -76,7 +66,6 @@ const Login = () => {
             onChange={(e) => setEmail(e.target.value)}
           />
           <br />
-
 
           <label className="form-label">Password</label>
           <input
@@ -92,5 +81,6 @@ const Login = () => {
     </div>
   );
 };
+
 
 export default Login;

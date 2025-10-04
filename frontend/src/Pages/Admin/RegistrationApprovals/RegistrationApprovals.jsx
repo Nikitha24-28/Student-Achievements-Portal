@@ -1,8 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import {
   Typography,
-  Card,
-  CardContent,
   Dialog,
   DialogTitle,
   DialogContent,
@@ -10,83 +8,97 @@ import {
   Button,
   Chip,
   Divider,
-  TextField
+  TextField,
+  List,
+  ListItem,
+  ListItemText,
+  ListItemSecondaryAction,
+  IconButton,
 } from '@mui/material';
 import axios from 'axios';
-import './registrationApprovals.css';
+import CloseIcon from '@mui/icons-material/Close';
 
+import './registrationApprovals.css';
 
 const RegistrationApprovals = () => {
   const [allEvents, setAllEvents] = useState([]);
   const [modalOpen, setModalOpen] = useState(false);
-  const [selectedEvent, setSelectedEvent] = useState(null);
+  const [selectedEventName, setSelectedEventName] = useState(null);
+  const [selectedStudent, setSelectedStudent] = useState(null);
   const [showRejectionInput, setShowRejectionInput] = useState(false);
   const [rejectionReason, setRejectionReason] = useState('');
+  const [loading, setLoading] = useState(false);
 
-
-  const handleOpenModal = (event) => {
-    setSelectedEvent(event);
-    setModalOpen(true);
-    setShowRejectionInput(false);
-    setRejectionReason('');
-  };
-
-  const handleCloseModal = () => {
-    setModalOpen(false);
-    setShowRejectionInput(false);
-    setRejectionReason('');
-  };
-
-  const getStatusChip = (status) => {
-    switch (status) {
-      case 'approved':
-        return <Chip label="Approved" color="success" size="small" />;
-      case 'rejected':
-        return <Chip label="Rejected" color="error" size="small" />;
-      default:
-        return <Chip label="Pending" color="warning" size="small" />;
-    }
-  };
-
-
+  // Fetch all registrations and keep all statuses
   const fetchData = async () => {
     try {
+      setLoading(true);
       const response = await axios.get('http://localhost:5000/fetch-registrations-admin');
-      const pendingEvents = response.data.filter(event => event.reg_status === 'pending');
-    setAllEvents(pendingEvents);
+      setAllEvents(response.data);
     } catch (error) {
       console.error('Error fetching registration data:', {
         message: error.message,
-        response: error.response?.data
+        response: error.response?.data,
       });
       alert('Failed to load data. Please check console for details.');
+    } finally {
+      setLoading(false);
     }
   };
+
   useEffect(() => {
     fetchData();
   }, []);
 
+  // Group registrations by event_name
+  // We'll show only pending students under each event
+  const groupedByEventName = allEvents.reduce((acc, event) => {
+    // Initialize if does not exist
+    if (!acc[event.event_name]) acc[event.event_name] = [];
+    acc[event.event_name].push(event);
+    return acc;
+  }, {});
 
-  const handleApprove = async () => {
+  // Open event modal to show all pending students for that event
+  const handleOpenModal = (eventName) => {
+    setSelectedEventName(eventName);
+    setSelectedStudent(null);
+    setShowRejectionInput(false);
+    setRejectionReason('');
+    setModalOpen(true);
+  };
+
+  const handleCloseModal = () => {
+    setModalOpen(false);
+    setSelectedEventName(null);
+    setSelectedStudent(null);
+    setShowRejectionInput(false);
+    setRejectionReason('');
+  };
+
+  const handleSelectStudent = (student) => {
+    // Reset rejection input each time a different student is clicked
+    setSelectedStudent(student);
+    setShowRejectionInput(false);
+    setRejectionReason('');
+  };
+
+  const handleApprove = async (student) => {
     try {
       await axios.post('http://localhost:5000/approve-registration', {
-        id: selectedEvent.id, // Use correct unique ID field
-        reg_status: 'approved'
+        id: student.id,
+        reg_status: 'approved',
       });
-      fetchData();
-      handleCloseModal();
+      await fetchData();
+      // Refresh modal views:
+      if (selectedStudent && selectedStudent.id === student.id) {
+        setSelectedStudent(null);
+      }
     } catch (err) {
       alert('Approval failed.');
       console.error(err);
     }
   };
-
-
-
-
-
-
-
 
   const handleReject = async () => {
     if (!rejectionReason.trim()) {
@@ -94,191 +106,185 @@ const RegistrationApprovals = () => {
       return;
     }
 
-
-
-
-
-
-
-
     try {
       await axios.post('http://localhost:5000/reject-registration', {
-        id: selectedEvent.id, // Use correct unique ID field
+        id: selectedStudent.id,
         reg_status: 'rejected',
-        reg_rej_reason: rejectionReason
+        reg_rej_reason: rejectionReason,
       });
-      fetchData();
-      handleCloseModal();
+      await fetchData();
+      setShowRejectionInput(false);
+      setRejectionReason('');
+      setSelectedStudent(null);
     } catch (err) {
       alert('Rejection failed.');
       console.error(err);
     }
   };
 
-
-
-
-
-
-
+  // Filter pending students for modal display of selected event
+  const pendingStudentsForSelectedEvent = selectedEventName
+    ? groupedByEventName[selectedEventName].filter((s) => s.reg_status === 'pending')
+    : [];
 
   return (
-    <div className="registration-container">
-      <div className="all-events-box" style={{ padding: '15px', borderRadius: '8px' }}>
-        <Typography variant="h6" gutterBottom>ALL REGISTRATION EVENTS ({allEvents.length})</Typography>
-        <div className="grid-two-columns" style={{ maxHeight: '600px', overflowY: 'auto', marginTop: '10px' }}>
-          {allEvents.map(event => (
-            <Card
-              key={event.event_id}
-              onClick={() => handleOpenModal(event)}
-              style={{ marginBottom: '10px', cursor: 'pointer' }}
+    <div className="registration-container" style={{ padding: 16 }}>
+      <Typography variant="h6" gutterBottom>
+        Pending Registrations By Event
+      </Typography>
+
+      {loading && <Typography>Loading...</Typography>}
+
+      {!loading && Object.keys(groupedByEventName).length === 0 && (
+        <Typography>No registrations found.</Typography>
+      )}
+
+      {!loading &&
+        Object.entries(groupedByEventName).map(([eventName, registrations]) => {
+          // Count pending registrations for this event
+          const pendingCount = registrations.filter((r) => r.reg_status === 'pending').length;
+
+          if (pendingCount === 0) return null; // Don't show events with no pending students
+
+          return (
+            <div
+              key={eventName}
+              style={{
+                padding: '8px 0',
+                borderBottom: '1px solid #ddd',
+                cursor: 'pointer',
+              }}
+              onClick={() => handleOpenModal(eventName)}
+              role="button"
+              tabIndex={0}
+              onKeyPress={(e) => {
+                if (e.key === 'Enter') handleOpenModal(eventName);
+              }}
             >
-              <CardContent>
-                <Typography variant="subtitle1">{event.event_name}</Typography>
-                <Typography variant="body2">Category: {event.category}</Typography>
-                <Typography variant="caption" display="block">
-                  Student: {event.user_name}
-                </Typography>
-                {getStatusChip(event.reg_status)}
-              </CardContent>
-            </Card>
-          ))}
-        </div>
-      </div>
+              <Typography variant="subtitle1">
+                {eventName} ({pendingCount} pending)
+              </Typography>
+            </div>
+          );
+        })}
 
-      {/* Modal */}
-      <Dialog open={modalOpen} onClose={handleCloseModal} maxWidth="md" fullWidth>
-        {selectedEvent && (
-          <>
-            <DialogTitle>
-              {selectedEvent.event_name} - {selectedEvent.category}
-              <div style={{ marginTop: '8px' }}>
-                {getStatusChip(selectedEvent.reg_status)}
-              </div>
-            </DialogTitle>
-            <DialogContent dividers>
-              <div style={{ padding: '16px' }}>
-                {/* Student Details */}
-                <Typography variant="h6" gutterBottom>Student Details</Typography>
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '16px' }}>
-                  <div>
-                    <Typography variant="subtitle2">Name</Typography>
-                    <Typography>{selectedEvent.user_name}</Typography>
-                  </div>
-                  <div>
-                    <Typography variant="subtitle2">Registration Number</Typography>
-                    <Typography>{selectedEvent.reg_no}</Typography>
-                  </div>
-                  <div>
-                    <Typography variant="subtitle2">Department</Typography>
-                    <Typography>{selectedEvent.dept}</Typography>
-                  </div>
-                  <div>
-                    <Typography variant="subtitle2">Batch Year</Typography>
-                    <Typography>{selectedEvent.end_year}</Typography>
-                  </div>
-                </div>
+      {/* Modal to show pending students for the selected event */}
+      <Dialog open={modalOpen} onClose={handleCloseModal} maxWidth="sm" fullWidth>
+        <DialogTitle>
+          {selectedEventName} - Pending Students
+          <IconButton
+            aria-label="close"
+            onClick={handleCloseModal}
+            sx={{ position: 'absolute', right: 8, top: 8 }}
+            size="large"
+          >
+            <CloseIcon />
+          </IconButton>
+        </DialogTitle>
+        <DialogContent dividers>
+          {pendingStudentsForSelectedEvent.length === 0 && (
+            <Typography>No pending students for this event.</Typography>
+          )}
+          <List>
+            {pendingStudentsForSelectedEvent.map((student) => (
+              <ListItem
+                button
+                key={student.id}
+                selected={selectedStudent?.id === student.id}
+                onClick={() => handleSelectStudent(student)}
+                divider
+              >
+                <ListItemText primary={student.user_name} />
+              </ListItem>
+            ))}
+          </List>
 
-                <Divider style={{ margin: '24px 0' }} />
+          {selectedStudent && (
+            <>
+              <Divider sx={{ my: 2 }} />
+              <Typography variant="subtitle1">Student Details</Typography>
+              <Typography>
+                <strong>Roll Number:</strong> {selectedStudent.reg_no}
+              </Typography>
+              <Typography>
+                <strong>Department:</strong> {selectedStudent.dept}
+              </Typography>
+              <Typography>
+                <strong>Batch Year:</strong> {selectedStudent.end_year}
+              </Typography>
 
-                {/* Event Details */}
-                <Typography variant="h6" gutterBottom>Event Details</Typography>
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '16px' }}>
-                  <div>
-                    <Typography variant="subtitle2">Event ID</Typography>
-                    <Typography>{selectedEvent.event_id}</Typography>
-                  </div>
-                  <div>
-                    <Typography variant="subtitle2">Event Name</Typography>
-                    <Typography>{selectedEvent.event_name}</Typography>
-                  </div>
-                  <div>
-                    <Typography variant="subtitle2">Category</Typography>
-                    <Typography>{selectedEvent.category}</Typography>
-                  </div>
-                  <div>
-                    <Typography variant="subtitle2">Status</Typography>
-                    <Typography>{selectedEvent.reg_status}</Typography>
-                  </div>
-                  <div>
-                    <Typography variant="subtitle2">Start Date</Typography>
-                    <Typography>
-                      {new Date(selectedEvent.start_date).toLocaleDateString()}
-                    </Typography>
-                  </div>
-                  <div>
-                    <Typography variant="subtitle2">End Date</Typography>
-                    <Typography>
-                      {new Date(selectedEvent.end_date).toLocaleDateString()}
-                    </Typography>
-                  </div>
-                </div>
-
-
-                {/* Description */}
-                {selectedEvent.description && (
-                  <>
-                    <Divider style={{ margin: '24px 0' }} />
-                    <Typography variant="h6" gutterBottom>Description</Typography>
-                    <Typography>{selectedEvent.description}</Typography>
-                  </>
-                )}
-
-
-                {/* Rejection Reason View */}
-                {selectedEvent.reg_status === 'rejected' && selectedEvent.reg_rej_reason && (
-                  <>
-                    <Divider style={{ margin: '24px 0' }} />
-                    <Typography variant="h6" gutterBottom>Rejection Reason</Typography>
-                    <Typography color="error">{selectedEvent.reg_rej_reason}</Typography>
-                  </>
-                )}
-
-
-                {/* Rejection Reason Input */}
-                {showRejectionInput && (
-                  <>
-                    <Divider style={{ margin: '24px 0' }} />
-                    <TextField
-                      fullWidth
-                      multiline
-                      label="Rejection Reason"
-                      value={rejectionReason}
-                      onChange={(e) => setRejectionReason(e.target.value)}
-                    />
-                  </>
-                )}
-              </div>
-            </DialogContent>
-
-
-            <DialogActions>
-              {selectedEvent.reg_status === 'pending' && (
+              {/* Show rejection reason if student rejected */}
+              {selectedStudent.reg_status === 'rejected' && selectedStudent.reg_rej_reason && (
                 <>
-                  <Button onClick={handleApprove} color="success" variant="contained">
-                    Approve
-                  </Button>
+                  <Divider sx={{ my: 2 }} />
+                  <Typography variant="subtitle2" color="error">
+                    Rejection Reason:
+                  </Typography>
+                  <Typography color="error">{selectedStudent.reg_rej_reason}</Typography>
+                </>
+              )}
+
+              {/* Approve/Reject buttons only if pending */}
+              {selectedStudent.reg_status === 'pending' && (
+                <>
+                  <Divider sx={{ my: 2 }} />
+
                   {!showRejectionInput ? (
-                    <Button onClick={() => setShowRejectionInput(true)} color="error" variant="contained">
-                      Reject
-                    </Button>
+                    <div style={{ display: 'flex', gap: 16 }}>
+                      <Button
+                        variant="contained"
+                        color="success"
+                        onClick={() => handleApprove(selectedStudent)}
+                      >
+                        Approve
+                      </Button>
+                      <Button
+                        variant="contained"
+                        color="error"
+                        onClick={() => setShowRejectionInput(true)}
+                      >
+                        Reject
+                      </Button>
+                    </div>
                   ) : (
-                    <Button onClick={handleReject} color="error" variant="contained">
-                      Submit Rejection
-                    </Button>
+                    <div style={{ marginTop: 12 }}>
+                      <TextField
+                        fullWidth
+                        multiline
+                        rows={3}
+                        label="Rejection Reason"
+                        value={rejectionReason}
+                        onChange={(e) => setRejectionReason(e.target.value)}
+                      />
+                      <div style={{ marginTop: 12, display: 'flex', gap: 8 }}>
+                        <Button variant="contained" color="error" onClick={handleReject}>
+                          Submit Rejection
+                        </Button>
+                        <Button
+                          variant="outlined"
+                          onClick={() => {
+                            setShowRejectionInput(false);
+                            setRejectionReason('');
+                          }}
+                        >
+                          Cancel
+                        </Button>
+                      </div>
+                    </div>
                   )}
                 </>
               )}
-              <Button onClick={handleCloseModal} color="primary" variant="outlined">
-                Close
-              </Button>
-            </DialogActions>
-          </>
-        )}
+            </>
+          )}
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleCloseModal} variant="outlined" color="primary">
+            Close
+          </Button>
+        </DialogActions>
       </Dialog>
     </div>
   );
 };
-
 
 export default RegistrationApprovals;

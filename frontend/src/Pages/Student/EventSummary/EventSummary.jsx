@@ -1,19 +1,28 @@
 import React, { useState, useEffect } from 'react';
 import {
-  Box,Typography,Card,CardContent,Dialog,
-  DialogTitle,DialogContent,DialogActions,Button,Chip,TextField,IconButton
+  Box,
+  Typography,
+  Card,
+  CardContent,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  Button,
+  Chip,
+  TextField,
+  IconButton
 } from '@mui/material';
 import axios from 'axios';
 import CloudUploadIcon from '@mui/icons-material/CloudUpload';
 import SearchOutlinedIcon from '@mui/icons-material/SearchOutlined';
-import './EventSummary.css';
+import '../EventSummary/EventSummary.css';
 import CalendarMonthIcon from '@mui/icons-material/CalendarMonth';
 import CategoryIcon from '@mui/icons-material/Category';
 import BusinessIcon from '@mui/icons-material/Business';
 import DescriptionIcon from '@mui/icons-material/Description';
 import FolderSharedIcon from '@mui/icons-material/FolderShared';
 import { Paper, Grid } from '@mui/material';
-
 
 const EventSummary = () => {
   const [showModal, setShowModal] = useState(false);
@@ -38,9 +47,7 @@ const EventSummary = () => {
   const [image, setImage] = useState(null);
   const [fileName, setFileName] = useState('');
 
-
   const email = localStorage.getItem('email');
-
 
   // Load student data and event information
   useEffect(() => {
@@ -58,16 +65,13 @@ const EventSummary = () => {
             end_year: studentData.end_year || ''
           }));
 
-
           // Fetch event history
           await fetchEventHistory(studentData.reg_no);
-
 
           // Fetch notifications (approved registrations)
           const notifRes = await fetch(`http://localhost:5000/summary-notifications/${studentData.reg_no}`);
           const notifData = await notifRes.json();
           if (notifRes.ok) setNotifications(notifData);
-
 
           // Fetch all approved event registrations for this student
           const regRes = await fetch(`http://localhost:5000/fetch-registrations-student?reg_no=${studentData.reg_no}`);
@@ -85,13 +89,11 @@ const EventSummary = () => {
     // eslint-disable-next-line
   }, [email]);
 
-
   function getTodayIST() {
     const now = new Date();
     const istOffset = 5.5 * 60 * 60 * 1000;
     return new Date(now.getTime() + (istOffset - now.getTimezoneOffset() * 60 * 1000));
   }
-
 
   function toMidnightIST(dateStr) {
     const date = new Date(dateStr);
@@ -101,7 +103,6 @@ const EventSummary = () => {
     const istOffsetMs = 5.5 * 60 * 60 * 1000;
     return new Date(Date.UTC(year, month, day, 0, 0, 0) + istOffsetMs);
   }
-
 
   // Fetch event history
   const fetchEventHistory = async (regNo) => {
@@ -114,7 +115,6 @@ const EventSummary = () => {
     }
   };
 
-
   // Format date for display
   const formatDate = (dateString) => {
     if (!dateString) return '';
@@ -122,15 +122,13 @@ const EventSummary = () => {
     return date.toISOString().split('T')[0];
   };
 
-
   // Set of event_ids for which summary is already submitted
   const submittedEventIds = new Set(eventHistory.map(e => parseInt(e.event_id)));
- 
+  
   // Only show events with approved registration and no summary yet
   const eventsNeedingSummary = approvedRegistrations.filter(
     reg => !submittedEventIds.has(parseInt(reg.event_id))
   );
-
 
   // Handle event selection for summary submission
   const handleEventSelect = async (eventId) => {
@@ -162,7 +160,6 @@ const EventSummary = () => {
     }
   };
 
-
   const handleSubmit = async (e) => {
     e.preventDefault();
     const formDataToSend = new FormData();
@@ -172,7 +169,6 @@ const EventSummary = () => {
     formDataToSend.append('description', description);
     if (image) formDataToSend.append('image', image);
     formDataToSend.append('status', 'pending');
-
 
     try {
       const res = await axios.post('http://localhost:5000/submit-in-eventhistory',
@@ -195,7 +191,6 @@ const EventSummary = () => {
     }
   };
 
-
   const resetForm = () => {
     setFormData(prev => ({
       ...prev,
@@ -211,7 +206,6 @@ const EventSummary = () => {
     setFileName('');
   };
 
-
   const getStatusChip = (status) => {
     switch (status) {
       case 'approved': return <Chip label="Approved" color="success" size="small" />;
@@ -219,7 +213,6 @@ const EventSummary = () => {
       default: return <Chip label="Pending" color="warning" size="small" />;
     }
   };
-
 
   // Notification logic
   const pendingNotifications = notifications.filter(
@@ -234,7 +227,6 @@ const EventSummary = () => {
       const todayMidnightIST = new Date(todayIST.getFullYear(), todayIST.getMonth(), todayIST.getDate());
       const daysPassed = Math.floor((todayMidnightIST - endDateIST) / msInDay);
 
-
       if (daysPassed >= 0 && daysPassed < 3) {
         const daysLeft = 3 - daysPassed;
         return `${daysLeft} day${daysLeft > 1 ? 's' : ''} left to upload event summary for ${event_name}`;
@@ -244,7 +236,6 @@ const EventSummary = () => {
       return null;
     })
     .filter(Boolean);
-
 
   return (
     <div className="eventsummarypage">
@@ -269,7 +260,6 @@ const EventSummary = () => {
           </button>
         </div>
       </div>
-
 
       {/* Event summaries list */}
       <div className="all-events-box">
@@ -309,7 +299,6 @@ const EventSummary = () => {
         </div>
       </div>
 
-
       {/* Event Details Dialog */}
       {selectedEvent && (
         <Dialog
@@ -322,7 +311,6 @@ const EventSummary = () => {
             {selectedEvent.event_name}
             <Box mt={1}>{getStatusChip(selectedEvent.status)}</Box>
           </DialogTitle>
-
 
           <DialogContent dividers sx={{ background: "#f8f9fa" }}>
             <Paper elevation={2} sx={{ p: 3, borderRadius: 2, background: "white", mb: 2 }}>
@@ -408,7 +396,6 @@ const EventSummary = () => {
             </Paper>
           </DialogContent>
 
-
           <DialogActions sx={{ px: 3, py: 2, justifyContent: 'flex-end', gap: 1.5 }}>
             <Button onClick={() => setSelectedEvent(null)} color="primary" variant="contained">
               Close
@@ -416,7 +403,6 @@ const EventSummary = () => {
           </DialogActions>
         </Dialog>
       )}
-
 
       {/* Add Event Summary Modal */}
       {showModal && (
@@ -442,7 +428,7 @@ const EventSummary = () => {
               {/* Event Selection Dropdown */}
               <TextField
                 select
-               
+                
                 value={formData.event_id}
                 onChange={(e) => handleEventSelect(e.target.value)}
                 fullWidth
@@ -555,6 +541,5 @@ const EventSummary = () => {
     </div>
   );
 };
-
 
 export default EventSummary;
