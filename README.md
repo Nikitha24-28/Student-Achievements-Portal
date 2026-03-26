@@ -96,15 +96,15 @@ Database (MySQL)
 ---
 
 ## 📁 Project Structure
-Student-Achievements-Portal/
-│── frontend/ # React application
-│── backend/ # Node + Express server
-│── routes/ # API routes
-│── controllers/ # Business logic
-│── models/ # Database queries
-│── config/ # DB configuration
-│── package.json
-│── README.md
+Student-Achievements-Portal/                                                                       
+│── frontend/ # React application                                                                     
+│── backend/ # Node + Express server                                                              
+│── routes/ # API routes                                                          
+│── controllers/ # Business logic                                                               
+│── models/ # Database queries                                                                 
+│── config/ # DB configuration                                                            
+│── package.json                                                                           
+│── README.md                                                            
 
 
 ---
