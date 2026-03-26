@@ -13,7 +13,7 @@ It allows:
 - Admins to verify and manage submissions  
 - Institutions to maintain structured achievement records  
 
-Such systems improve transparency, organization, and accessibility of student data in academic environments :contentReference[oaicite:0]{index=0}.
+Such systems improve transparency, organization, and accessibility of student data in academic environments.
 
 ---
 
@@ -133,20 +133,20 @@ npm install
 npm run dev
 ```
 
-Future Improvements
-📥 Export student data as reports (PDF/Excel)
-📊 Dashboard analytics (charts & insights)
-🔐 JWT-based authentication
-🌐 Deployment on cloud (AWS / Vercel)
-📱 Mobile-friendly UI
+Future Improvements                                                   
+📥 Export student data as reports (PDF/Excel)                                                            
+📊 Dashboard analytics (charts & insights)                                                                
+🔐 JWT-based authentication                                                                        
+🌐 Deployment on cloud (AWS / Vercel)                                                                   
+📱 Mobile-friendly UI                                                                            
 
-💡 Key Learnings
-Building full-stack applications using MERN-like architecture (without MongoDB)
-Designing relational databases using MySQL
-Creating RESTful APIs with Express
-Handling real-world data workflows (submission → approval → storage)
-Managing role-based access systems
+💡 Key Learnings                                                                          
+Building full-stack applications using MERN-like architecture (without MongoDB)                                                                  
+Designing relational databases using MySQL                                                                     
+Creating RESTful APIs with Express                                                           
+Handling real-world data workflows (submission → approval → storage)                                                             
+Managing role-based access systems                                                         
+ 
 
-
-🤝 Contributing
+🤝 Contributing                                         
 Contributions are welcome! Feel free to fork and enhance the project.
